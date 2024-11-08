@@ -13,4 +13,8 @@
 
 - Powered without a cord.
 - A way to manually add a point for a missed goal.
+- Fancy stuff when a goal is scored and the game is won.
+  - Flashing lights
+  - GOAL!!, WINNER!! on the screen
+  - Sound effects, crowd roar, etc.
 - Wireless connectivity to a home automation system.

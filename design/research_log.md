@@ -51,7 +51,7 @@ Some things we found attractive:
 - Analog output provides 'raw' measurement
 - Integrated LEDs help with debug
 
-#### Experiment 1: Breadboard with Multimeter
+#### Sensor Experiment 1: Breadboard with Multimeter
 
 The IR reflectivity sensor was attached to a breadboard and powered with a 5 volt bench top power supply. A multimeter was
 used to measure the voltage between ground and the analog or digital output, marked AO, and DO respectively. A ball was moved
@@ -70,7 +70,7 @@ in front of the sensor. Here's what we learned:
 
 **Conclusion: Digital output will be used for detecting balls.
 
-##### Experiment 2: Testing Goals
+##### Sensor Experiment 2: Testing Goals
 
 The IR reflectivity sensor was attached to a long cable and hot glued in the ball return. An oscilloscope was setup to watch the digital output. 
 
@@ -91,7 +91,7 @@ Conclusions:
 - No issues with using a 3 meter length of cable between the sensor and the oscilloscope.
 
 
-##### Experiment 3: IR Interference Testing
+##### Sensor Experiment 3: IR Interference Testing
 
 The IR emitter operates at 950nm wavelength. We will test using a consumer TV remote control for creating interference.
 
@@ -105,4 +105,42 @@ into the ball return and the goal from many angles, we could not register a sign
 Conclusion:
 
 The IR reflectivity sensor is prone to consumer IR remote interference when in close proximity however the foosball table goal sufficiently blocks the interference.
+
+## Microcontroller Selection and Development
+
+We have started prototyping and development with a [ESP32-C3](https://www.espressif.com/en/products/socs/esp32-c3)
+[devkit](https://www.amazon.com/gp/product/B0BWN14X65/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1). 
+
+Some reasons:
+
+- I already it
+- It's inexpensive
+- System on Chip includes WiFi and Bluetooth connectivity
+- PlatformIO and Arduino support
+- Plenty of peripherals (UART, GPIO, ADC, SPI, I2C, etc)
+
+The devkit seems to be compatible with or a clone of the AirM2M Core ESP32-C3 board and
+supported by [PlatformIO](https://docs.platformio.org/en/latest/boards/espressif32/airm2m_core_esp32c3.html).
+
+Our platformio.ini configuration:
+```
+[env:airm2m_core_esp32c3]
+platform = espressif32
+board = airm2m_core_esp32c3
+framework = arduino
+build_type = debug
+upload_protocol = esp-builtin
+debug_tool = esp-builtin
+```
+
+To validate our configuration, we copied the [Blinker sample](https://github.com/platformio/platform-espressif32/blob/develop/examples/arduino-blink/src/Blink.cpp) and verified the built-in LED flashed under control of our code. We then modified the code it to blink the LED based on a GPIO input. Using this we verified the Ardunio pin assignments matched the labels on the dev board. 
+
+Other findings:
+
+- Upload/Flash works correctly.
+- Debugger mostly works but with some issues.
+  - Lots of console errors (benign?) when attached.
+  - Breakpoints within interrupt routines trigger but show no values.
+
+
 

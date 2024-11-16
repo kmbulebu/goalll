@@ -109,7 +109,7 @@ The IR reflectivity sensor is prone to consumer IR remote interference when in c
 ## Microcontroller Selection and Development
 
 We have started prototyping and development with a [ESP32-C3](https://www.espressif.com/en/products/socs/esp32-c3)
-[devkit](https://www.amazon.com/gp/product/B0BWN14X65/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1). 
+[devkit](https://wiki.luatos.org/chips/esp32c3/board.html#id5) bought from [Amazon](https://www.amazon.com/gp/product/B0BWN14X65/ref=ppx_yo_dt_b_search_asin_title?ie=UTF8&psc=1). 
 
 Some reasons:
 
@@ -142,5 +142,17 @@ Other findings:
   - Lots of console errors (benign?) when attached.
   - Breakpoints within interrupt routines trigger but show no values.
 
+## Prototyping PIN Assignments
 
-
+| Pin | Logical PIN | Assignment | 
+| --- | ----------- | ---------- |
+| 05  | USB_D-      | USB-C Connector |
+| 06  | USB_D+      | USB-C Connector |
+| 19  | SPI_CK      | Display Home and Away |
+| 20  | SPI_MOSI    | Display Home and Away |
+| 21  | SPI_MISO    | Display Home and Away |
+| 23  | SPI_CS      | Display Home CS |
+| 04  | GPIO12      | Display Away CS |
+| 22  | GPIO06      | Game Button |
+| 28  | GPIO04      | Home Goal |
+| 29  | GPIO08      | Away Goal |

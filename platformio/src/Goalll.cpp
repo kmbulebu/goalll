@@ -4,14 +4,16 @@
  */
 
 #include <Arduino.h>
+#include <LiquidCrystal.h>
+#include "ScoreKeeper.h"
 
 // Set LED_BUILTIN if it is not defined by Arduino framework
 #ifndef LED_BUILTIN
     #define LED_BUILTIN 2
 #endif
 
-#define PIN_GOAL_HOME    3
-#define PIN_GOAL_AWAY    4
+#define PIN_GOAL_HOME    1
+#define PIN_GOAL_AWAY    12
 #define PIN_BUTTON_RESET 5
 
 enum class GoalSensorState { Waiting, Low, High };
@@ -32,22 +34,11 @@ unsigned long goalAwaySensorStartTime = 0;
 unsigned long goalAwaySensorEndTime = 0;
 GoalSensorState awayGoalState = GoalSensorState::Waiting;
 
-// Team Scores
-unsigned int homeScore = 0;
-unsigned int awayScore = 0;
-
-void setup() {
-  // initialize LED digital pin as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  // Configure the home/away goal sensor digital pin.
-  pinMode(PIN_GOAL_HOME, INPUT);
-  pinMode(PIN_GOAL_AWAY, INPUT);
-}
+// Maximum score of 10
+ScoreKeeper* scoreKeeper;
 
 void resetGame() {
-  homeScore = 0;
-  awayScore = 0;
+  scoreKeeper = new ScoreKeeper(10);
   goalHomeSensorStartTime = 0;
   goalHomeSensorEndTime = 0;
   homeGoalState = GoalSensorState::Waiting;
@@ -59,16 +50,25 @@ void resetGame() {
   resetButtonState = ButtonState::Waiting;
 }
 
-void goalHomeScored() {
-    homeScore = homeScore + 1;
+void goalHomeScored(unsigned long goalTime) {
+  scoreKeeper->scoreHomeGoal(goalTime);
 }
 
-void goalAwayScored() {
-    awayScore = awayScore + 1;
+void goalAwayScored(unsigned long goalTime) {
+  scoreKeeper->scoreAwayGoal(goalTime);
 }
 
 void undoLastGoal() {
-  // TODO
+  scoreKeeper->removeLastGoal();
+}
+
+void setup() {
+  // Configure the home/away goal sensor digital pin.
+  pinMode(PIN_GOAL_HOME, INPUT);
+  pinMode(PIN_GOAL_AWAY, INPUT);
+
+  // Reset Game
+  resetGame();
 }
 
 // Main loop.
@@ -109,7 +109,7 @@ void loop() {
         if (resetButtonPulseLength > 10 && resetButtonPulseLength < 100) {
           // Short push Remove last goal
           undoLastGoal();
-        } else if (resetButtonPulseLength > 100 && resetButtonPulseLength < 2000) {
+        } else if (resetButtonPulseLength > 500 && resetButtonPulseLength < 2000) {
           // Long push Reset game.
           resetGame();
         }
@@ -138,14 +138,15 @@ void loop() {
       {
         // Calculate pulse length
         long goalHomeSensorPulseLength = goalHomeSensorEndTime - goalHomeSensorStartTime;
-        // Reset timers
-        goalHomeSensorStartTime = 0;
-        goalHomeSensorEndTime = 0;
 
         if (goalHomeSensorPulseLength > 10 && goalHomeSensorPulseLength < 100) {
           // It's a goal!!!
-          goalHomeScored();
+          goalHomeScored(goalHomeSensorStartTime);
         }
+
+        // Reset timers
+        goalHomeSensorStartTime = 0;
+        goalHomeSensorEndTime = 0;
       }
     default:
       homeGoalState = GoalSensorState::Waiting;
@@ -171,14 +172,15 @@ void loop() {
       {
         // Calculate pulse length
         long goalAwaySensorPulseLength = goalAwaySensorEndTime - goalAwaySensorStartTime;
-        // Reset timers
-        goalAwaySensorStartTime = 0;
-        goalAwaySensorEndTime = 0;
 
         if (goalAwaySensorPulseLength > 10 && goalAwaySensorPulseLength < 100) {
           // It's a goal!!!
-          goalAwayScored();
+          goalAwayScored(goalAwaySensorStartTime);
         }
+
+        // Reset timers
+        goalAwaySensorStartTime = 0;
+        goalAwaySensorEndTime = 0;
       }
     default:
       awayGoalState = GoalSensorState::Waiting;

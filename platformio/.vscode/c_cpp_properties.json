@@ -10,6 +10,7 @@
             "includePath": [
                 "/Users/kmbulebu/git/goalll/platformio/include",
                 "/Users/kmbulebu/git/goalll/platformio/src",
+                "/Users/kmbulebu/git/goalll/platformio/.pio/libdeps/airm2m_core_esp32c3/LiquidCrystal/src",
                 "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/newlib/platform_include",
                 "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/freertos/include",
                 "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/freertos/include/esp_additions/freertos",
@@ -243,6 +244,7 @@
                 "path": [
                     "/Users/kmbulebu/git/goalll/platformio/include",
                     "/Users/kmbulebu/git/goalll/platformio/src",
+                    "/Users/kmbulebu/git/goalll/platformio/.pio/libdeps/airm2m_core_esp32c3/LiquidCrystal/src",
                     "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/newlib/platform_include",
                     "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/freertos/include",
                     "/Users/kmbulebu/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32c3/include/freertos/include/esp_additions/freertos",

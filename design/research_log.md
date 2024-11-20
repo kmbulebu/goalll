@@ -148,11 +148,31 @@ Other findings:
 | --- | ----------- | ---------- |
 | 05  | USB_D-      | USB-C Connector |
 | 06  | USB_D+      | USB-C Connector |
-| 19  | SPI_CK      | Display Home and Away |
-| 20  | SPI_MOSI    | Display Home and Away |
-| 21  | SPI_MISO    | Display Home and Away |
-| 23  | SPI_CS      | Display Home CS |
-| 04  | GPIO12      | Display Away CS |
-| 22  | GPIO06      | Game Button |
-| 28  | GPIO04      | Home Goal |
-| 29  | GPIO08      | Away Goal |
+| 19  | SPI_CK      | Display Home Pin 4 |
+| 20  | SPI_MOSI    | Display Home Pin 5 |
+| 21  | SPI_MISO    | |
+| 23  | SPI_CS      | Display Home CS Pin 16 | 
+| 04  | GPIO12      | Display Home DC Pin 14 |
+| 10  | GPIO13      | Display Home RST Pin 15 |
+| 30  | GPIO09      | Game Button |
+| 27  | GPIO05      | Away Goal IR Sensor DO |
+| 28  | GPIO04      | Home Goal IR Sensor DO |
+
+
+## Display Selection
+
+Teyleten Robot 3.12 inch OLED Display Module 256 * 64 OLED Display Module 7-Pin SPI Interface SSD1322 Serial Screen White on [Amazon](https://www.amazon.com/dp/B0C61Z6Q8V)
+
+> From Tim Corcoran's very helpful review:
+>This is a very nice 256*64 display based on the SSD1322 controller. The module can be configured to communicate via SPI (3 or 4 wire) or Parallel (80xx or 68xx). It >comes configured for 80xx so I needed to move the 0-ohm bridge from R6 to R5 for use in my ESP32 design. Strapping options are clearly printed on the back of the >module. I tested with a SEEED XIAO ESP32-S3 dev board. The easiest library to use with it is U8G2 and I used the following constructor line for the XIAO pinout:
+>U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 6, /* dc=*/ 4, /* reset=*/ 5);
+>
+>The module came without any documentation and if you search for the pinout, there is a lot of confusion on other Amazon listings. For my SPI-7 setup I wired the >following pins of the 16 pin connector on the module to my XIAO controller.
+>
+>1: Ground
+>2: VCC (3.3v, did not try 5V)
+>4: SCLK (to GPIO7 on XIAO)
+>5: MOSI (to GPIO9 on XIAO)
+>14: DC. (to GPIO4 on XIAO)
+>15: RST (to GPIO5 on XIAO)
+>16: CS (to GPIO6 on XIAO)

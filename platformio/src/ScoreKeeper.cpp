@@ -48,17 +48,29 @@ unsigned int ScoreKeeper::getAwayScore() {
 }
 
 void ScoreKeeper::scoreHomeGoal(unsigned long gameTime) {
-    homeScore++;
-    pushGoal(0, gameTime);
+    if (!isGameOver()) {
+        homeScore++;
+        pushGoal(0, gameTime);
+    }
 }
 
 void ScoreKeeper::scoreAwayGoal(unsigned long gameTime) {
-    awayScore++;
-    pushGoal(1, gameTime);
+    if (!isGameOver()) {
+        awayScore++;
+        pushGoal(1, gameTime);
+    }
 }
 
 void ScoreKeeper::removeLastGoal() {
-    popGoal();
+    Goal lastGoal = popGoal();
+    switch (lastGoal.team) {
+        case 0:
+            homeScore--;
+            break;
+        case 1:
+            awayScore--;
+            break;
+    }
 }
 
 bool ScoreKeeper::isGameOver() {

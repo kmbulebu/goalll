@@ -4,7 +4,7 @@
  */
 
 #include <Arduino.h>
-#include <LiquidCrystal.h>
+#include <WiFi.h>
 #include "ScoreKeeper.h"
 
 // Set LED_BUILTIN if it is not defined by Arduino framework
@@ -12,9 +12,9 @@
     #define LED_BUILTIN 2
 #endif
 
-#define PIN_GOAL_HOME    1
-#define PIN_GOAL_AWAY    12
-#define PIN_BUTTON_RESET 5
+#define PIN_GOAL_HOME    4
+#define PIN_GOAL_AWAY    5
+#define PIN_BUTTON_RESET 9
 
 enum class GoalSensorState { Waiting, Low, High };
 enum class ButtonState { Waiting, Pressed, Released };
@@ -37,6 +37,23 @@ GoalSensorState awayGoalState = GoalSensorState::Waiting;
 // Maximum score of 10
 ScoreKeeper* scoreKeeper;
 
+void serialPrintScore() {
+  Serial.print("Home: ");
+  Serial.print(scoreKeeper->getHomeScore());
+  Serial.print(" Away: ");
+  Serial.println(scoreKeeper->getAwayScore());
+  Serial.print("Winning Team: ");
+  if (scoreKeeper->isHomeWinning()) {
+    Serial.println("Home");
+  } else if (scoreKeeper->isAwayWinning()) {
+    Serial.println("Away");
+  } else {
+    Serial.println("Tied");
+  }
+  Serial.print("Game Over? ");
+  Serial.println(scoreKeeper->isGameOver());
+}
+
 void resetGame() {
   scoreKeeper = new ScoreKeeper(10);
   goalHomeSensorStartTime = 0;
@@ -48,32 +65,46 @@ void resetGame() {
   resetButtonStartTime = 0;
   resetButtonEndTime = 0;
   resetButtonState = ButtonState::Waiting;
+
+  Serial.println("Game Reset");
 }
 
 void goalHomeScored(unsigned long goalTime) {
   scoreKeeper->scoreHomeGoal(goalTime);
+  Serial.println("Home Scored");
+  serialPrintScore();
 }
 
 void goalAwayScored(unsigned long goalTime) {
   scoreKeeper->scoreAwayGoal(goalTime);
+  Serial.println("Away Scored");
+  serialPrintScore();
 }
 
 void undoLastGoal() {
   scoreKeeper->removeLastGoal();
+  Serial.println("Undid Last Goal.");
+  serialPrintScore();
 }
 
 void setup() {
   // Configure the home/away goal sensor digital pin.
   pinMode(PIN_GOAL_HOME, INPUT);
   pinMode(PIN_GOAL_AWAY, INPUT);
+  pinMode(PIN_BUTTON_RESET, INPUT);
 
+  delay(2000);
+
+  // Setup Serial Comms
+  Serial.begin(115200);
+  Serial.println("setup()");
+  
   // Reset Game
   resetGame();
 }
 
 // Main loop.
 void loop() {
-
   // Read the value of our reset button
   int resetButtonPinValue = digitalRead(PIN_BUTTON_RESET);
   // Read the value of our home/away goal sensors
@@ -106,10 +137,13 @@ void loop() {
         resetButtonStartTime = 0;
         resetButtonEndTime = 0;
 
-        if (resetButtonPulseLength > 10 && resetButtonPulseLength < 100) {
+        Serial.print("Reset Button Pulse Length: ");
+        Serial.println(resetButtonPulseLength);
+
+        if (resetButtonPulseLength > 50 && resetButtonPulseLength < 200) {
           // Short push Remove last goal
           undoLastGoal();
-        } else if (resetButtonPulseLength > 500 && resetButtonPulseLength < 2000) {
+        } else if (resetButtonPulseLength > 1000 && resetButtonPulseLength < 3000) {
           // Long push Reset game.
           resetGame();
         }
@@ -138,6 +172,9 @@ void loop() {
       {
         // Calculate pulse length
         long goalHomeSensorPulseLength = goalHomeSensorEndTime - goalHomeSensorStartTime;
+
+        Serial.print("Goal Home Pulse Length: ");
+        Serial.println(goalHomeSensorPulseLength);
 
         if (goalHomeSensorPulseLength > 10 && goalHomeSensorPulseLength < 100) {
           // It's a goal!!!
@@ -172,6 +209,9 @@ void loop() {
       {
         // Calculate pulse length
         long goalAwaySensorPulseLength = goalAwaySensorEndTime - goalAwaySensorStartTime;
+
+        Serial.print("Goal Away Pulse Length: ");
+        Serial.println(goalAwaySensorPulseLength);
 
         if (goalAwaySensorPulseLength > 10 && goalAwaySensorPulseLength < 100) {
           // It's a goal!!!

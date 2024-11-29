@@ -36,6 +36,10 @@ public:
 
     unsigned int getAwayScore();
 
+    char* getHomeScoreFormatted();
+
+    char* getAwayScoreFormatted();
+
     void scoreHomeGoal(unsigned long gameTime);
 
     void scoreAwayGoal(unsigned long gameTime);

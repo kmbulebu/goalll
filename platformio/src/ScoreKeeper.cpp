@@ -1,5 +1,6 @@
 // Team Scores
 #include "ScoreKeeper.h"
+#include <Arduino.h>
 
 void ScoreKeeper::pushGoal(unsigned int team, unsigned long gameTime) {
     // Record the goal
@@ -39,12 +40,31 @@ ScoreKeeper::~ScoreKeeper() {
     delete[] goals;
 }
 
+static char* getScoreFormatted(unsigned int score) {
+    // Buffer to store the formatted string
+    static char scoreStr[12]; // Sufficient size for an unsigned int and null-terminator
+
+    // Convert the unsigned int to a string
+    snprintf(scoreStr, sizeof(scoreStr), "%u", score);
+
+    // Return the pointer to the static buffer
+    return scoreStr;
+}
+
 unsigned int ScoreKeeper::getHomeScore() {
     return homeScore;
 }
 
 unsigned int ScoreKeeper::getAwayScore() {
     return awayScore;
+}
+
+char* ScoreKeeper::getHomeScoreFormatted() {
+    return getScoreFormatted(homeScore);
+}
+
+char* ScoreKeeper::getAwayScoreFormatted() {
+    return getScoreFormatted(awayScore);
 }
 
 void ScoreKeeper::scoreHomeGoal(unsigned long gameTime) {

@@ -541,7 +541,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60116",
+                "PLATFORMIO=60118",
                 "ARDUINO_AirM2M_CORE_ESP32C3",
                 "ARDUINO_USB_MODE=1",
                 "ARDUINO_USB_MODE=1",

@@ -45,12 +45,10 @@ ScoreKeeper* scoreKeeper;
 
 // OLED Display
 // Using HW SPI
-//U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI 
-//U8G2_SSD1322_NHD_256X64_F_2ND_4W_HW_SPI 
 U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ PIN_DISPLAY_CS, /* dc=*/ PIN_DISPLAY_DC, /* reset=*/ PIN_DISPLAY_RST);
-u8g2_uint_t home_score_start_pos_x = 0;
-u8g2_uint_t away_score_start_pos_x = 0;
-u8g2_uint_t score_baseline_pos_y = 0;
+
+static const char* home_team_name = "HOME";
+static const char* away_team_name = "AWAY";
 
 void serialPrintScore() {
   Serial.print("Home: ");
@@ -82,6 +80,47 @@ void resetGame() {
   resetButtonState = ButtonState::Waiting;
 
   Serial.println("Game Reset");
+}
+
+
+void drawScoreBoard() {
+  u8g2.clearBuffer();
+
+  const char* home_score_formatted = scoreKeeper->getHomeScoreFormatted();
+  const char* away_score_formatted = scoreKeeper->getAwayScoreFormatted();
+ 
+  // Write Score
+  u8g2.setFont(u8g2_font_logisoso58_tr);
+  u8g2.setFontDirection(0); // Left to Right
+  u8g2.setFontPosBaseline();
+  //u8g2.drawButtonUTF8(home_score_start_pos_x, score_baseline_pos_y, U8G2_BTN_INV,0, 0, 0, scoreKeeper->getHomeScoreFormatted());
+  
+  u8g2_uint_t display_height_half = u8g2.getDisplayHeight() / 2;
+  u8g2_uint_t display_width_half = u8g2.getDisplayWidth() / 2;
+
+  // Calculate Position for Score #s
+  u8g2_uint_t home_score_start_pos_x = (display_width_half - u8g2.getStrWidth(home_score_formatted)) / 2;
+  u8g2_uint_t away_score_start_pos_x = display_width_half + (display_width_half - u8g2.getStrWidth(away_score_formatted)) / 2;
+  u8g2_uint_t score_baseline_pos_y = u8g2.getDisplayHeight() - ((u8g2.getDisplayHeight() - u8g2.getFontAscent()) / 2);
+  
+  // Draw the Score #s
+  u8g2.drawStr(home_score_start_pos_x, score_baseline_pos_y, home_score_formatted);
+  u8g2.drawStr(away_score_start_pos_x, score_baseline_pos_y, away_score_formatted);
+
+  // Draw Home Team Name
+  u8g2.setFont(u8g2_font_ncenB10_tr);
+  u8g2.setFontDirection(1); // Top to down
+  u8g2_uint_t home_team_name_start_y = (u8g2.getDisplayHeight() - u8g2.getStrWidth(home_team_name)) / 2;
+  u8g2.drawStr(0,home_team_name_start_y, home_team_name);
+  
+  // Draw Away Team Name
+  //u8g2.setFont(u8g2_font_ncenB10_tr);
+  u8g2.setFontDirection(3); // Down to Top
+  u8g2_uint_t away_team_name_start_y = u8g2.getDisplayHeight() - (u8g2.getDisplayHeight() - u8g2.getStrWidth(away_team_name)) / 2;
+  u8g2_uint_t away_team_name_start_x = u8g2.getDisplayWidth() - u8g2.getFontAscent() + 5;
+  u8g2.drawStr(away_team_name_start_x,away_team_name_start_y, away_team_name);
+
+  u8g2.sendBuffer();
 }
 
 void goalHomeScored(unsigned long goalTime) {
@@ -120,48 +159,10 @@ void setup() {
   // Setup the display
   u8g2.begin();
 
-  //u8g2.setFont(u8g2_font_logisoso58_tr);
-  //u8g2.setFontPosBaseline();
-  //u8g2_uint_t font_width = u8g2.getMaxCharWidth();
-  //u8g2_uint_t font_height = u8g2.getMaxCharHeight();
-
-  u8g2_uint_t height_half = u8g2.getDisplayHeight() / 2;
-  u8g2_uint_t width_half = u8g2.getDisplayWidth() / 2;
-
-  home_score_start_pos_x = width_half + (width_half - 40) / 2;
-  away_score_start_pos_x = (width_half - 40) / 2;
-  score_baseline_pos_y = u8g2.getDisplayHeight() - ((u8g2.getDisplayHeight() - 55) / 2);
-
-
-  // Serial.print(font_width);
-  // Serial.print(" ");
-  // Serial.println(font_height);
-
-  Serial.print(home_score_start_pos_x);
-  Serial.print(" ");
-  Serial.println(score_baseline_pos_y);
-  
   // Reset Game
   resetGame();
 }
 
-void drawScoreBoard() {
-  u8g2.clearBuffer();
-
-  // Write Score
-  u8g2.setFont(u8g2_font_logisoso58_tr);
-  u8g2.setFontDirection(0); // Left to Right
-  u8g2.setFontPosBaseline();
-  u8g2.drawStr(home_score_start_pos_x, score_baseline_pos_y, scoreKeeper->getHomeScoreFormatted());
-  u8g2.drawStr(away_score_start_pos_x, score_baseline_pos_y, scoreKeeper->getAwayScoreFormatted());
-
-  // Write Teams
-  // u8g2.setFont(u8g2_font_ncenB14_tr);
-  // u8g2.setFontDirection(1); // Top to down
-  // u8g2.drawStr(0,0, "Yellow");
-
-  u8g2.sendBuffer();
-}
 
 // Main loop.
 void loop() {

@@ -5,22 +5,18 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <U8g2lib.h>
+//#include <lvgl.h>
+//#include <U8g2lib.h>
+#include <Arduino_GFX_Library.h>
+#include <esp_lcd_panel_vendor.h>
+#include <esp_lcd_panel_rgb.h>
+#include <esp_idf_version.h>
+
+
 #include <SPI.h>
 #include <Wire.h>
 #include "ScoreKeeper.h"
-
-// Set LED_BUILTIN if it is not defined by Arduino framework
-#ifndef LED_BUILTIN
-    #define LED_BUILTIN 2
-#endif
-
-#define PIN_GOAL_HOME    4
-#define PIN_GOAL_AWAY    5
-#define PIN_BUTTON_RESET 9
-#define PIN_DISPLAY_CS   7
-#define PIN_DISPLAY_DC   12
-#define PIN_DISPLAY_RST  13
+#include "Pins.h"
 
 enum class GoalSensorState { Waiting, Low, High };
 enum class ButtonState { Waiting, Pressed, Released };
@@ -45,7 +41,27 @@ ScoreKeeper* scoreKeeper;
 
 // OLED Display
 // Using HW SPI
-U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ PIN_DISPLAY_CS, /* dc=*/ PIN_DISPLAY_DC, /* reset=*/ PIN_DISPLAY_RST);
+//U8G2_SSD1322_NHD_256X64_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ PIN_DISPLAY_CS, /* dc=*/ PIN_DISPLAY_DC, /* reset=*/ PIN_DISPLAY_RST);
+
+// ESP32-S3 RGB Panel wiring
+const int BACKLIGHT_PIN = 2;
+Arduino_ESP32RGBPanel *rgbpanel = new Arduino_ESP32RGBPanel(
+  /* de, vsync, hsync, pclk */
+  41, 40, 39, 0,
+  /* R0..R4 */
+  14, 21, 47, 48, 45,
+  /* G0..G5 */
+   9, 46,  3,  8, 16,  1,
+  /* B0..B4 */
+  15,  7,  6,  5,  4,
+  /* hsync_polarity, hfp, hpw, hbp */
+   0, 40, 48, 40,
+  /* vsync_polarity, vfp, vpw, vbp */
+   0,  1, 31, 13,
+  /* pclk_active_neg, prefer_speed (Hz), useBigEndian, de_idle_high, pclk_idle_high, bounce_buffer_size_px */
+   1, 15000000, false, 0, 0, 0
+);
+Arduino_RGB_Display *gfx = new Arduino_RGB_Display(800, 480, rgbpanel, 0 /* rotation */, true /* auto_flush */);
 
 static const char* home_team_name = "HOME";
 static const char* away_team_name = "AWAY";
@@ -83,45 +99,45 @@ void resetGame() {
 }
 
 
-void drawScoreBoard() {
-  u8g2.clearBuffer();
+// void drawScoreBoard() {
+//   u8g2.clearBuffer();
 
-  const char* home_score_formatted = scoreKeeper->getHomeScoreFormatted();
-  const char* away_score_formatted = scoreKeeper->getAwayScoreFormatted();
+//   const char* home_score_formatted = scoreKeeper->getHomeScoreFormatted();
+//   const char* away_score_formatted = scoreKeeper->getAwayScoreFormatted();
  
-  // Write Score
-  u8g2.setFont(u8g2_font_logisoso58_tr);
-  u8g2.setFontDirection(0); // Left to Right
-  u8g2.setFontPosBaseline();
-  //u8g2.drawButtonUTF8(home_score_start_pos_x, score_baseline_pos_y, U8G2_BTN_INV,0, 0, 0, scoreKeeper->getHomeScoreFormatted());
+//   // Write Score
+//   u8g2.setFont(u8g2_font_logisoso58_tr);
+//   u8g2.setFontDirection(0); // Left to Right
+//   u8g2.setFontPosBaseline();
+//   //u8g2.drawButtonUTF8(home_score_start_pos_x, score_baseline_pos_y, U8G2_BTN_INV,0, 0, 0, scoreKeeper->getHomeScoreFormatted());
   
-  u8g2_uint_t display_height_half = u8g2.getDisplayHeight() / 2;
-  u8g2_uint_t display_width_half = u8g2.getDisplayWidth() / 2;
+//   u8g2_uint_t display_height_half = u8g2.getDisplayHeight() / 2;
+//   u8g2_uint_t display_width_half = u8g2.getDisplayWidth() / 2;
 
-  // Calculate Position for Score #s
-  u8g2_uint_t home_score_start_pos_x = (display_width_half - u8g2.getStrWidth(home_score_formatted)) / 2;
-  u8g2_uint_t away_score_start_pos_x = display_width_half + (display_width_half - u8g2.getStrWidth(away_score_formatted)) / 2;
-  u8g2_uint_t score_baseline_pos_y = u8g2.getDisplayHeight() - ((u8g2.getDisplayHeight() - u8g2.getFontAscent()) / 2);
+//   // Calculate Position for Score #s
+//   u8g2_uint_t home_score_start_pos_x = (display_width_half - u8g2.getStrWidth(home_score_formatted)) / 2;
+//   u8g2_uint_t away_score_start_pos_x = display_width_half + (display_width_half - u8g2.getStrWidth(away_score_formatted)) / 2;
+//   u8g2_uint_t score_baseline_pos_y = u8g2.getDisplayHeight() - ((u8g2.getDisplayHeight() - u8g2.getFontAscent()) / 2);
   
-  // Draw the Score #s
-  u8g2.drawStr(home_score_start_pos_x, score_baseline_pos_y, home_score_formatted);
-  u8g2.drawStr(away_score_start_pos_x, score_baseline_pos_y, away_score_formatted);
+//   // Draw the Score #s
+//   u8g2.drawStr(home_score_start_pos_x, score_baseline_pos_y, home_score_formatted);
+//   u8g2.drawStr(away_score_start_pos_x, score_baseline_pos_y, away_score_formatted);
 
-  // Draw Home Team Name
-  u8g2.setFont(u8g2_font_ncenB10_tr);
-  u8g2.setFontDirection(1); // Top to down
-  u8g2_uint_t home_team_name_start_y = (u8g2.getDisplayHeight() - u8g2.getStrWidth(home_team_name)) / 2;
-  u8g2.drawStr(0,home_team_name_start_y, home_team_name);
+//   // Draw Home Team Name
+//   u8g2.setFont(u8g2_font_ncenB10_tr);
+//   u8g2.setFontDirection(1); // Top to down
+//   u8g2_uint_t home_team_name_start_y = (u8g2.getDisplayHeight() - u8g2.getStrWidth(home_team_name)) / 2;
+//   u8g2.drawStr(0,home_team_name_start_y, home_team_name);
   
-  // Draw Away Team Name
-  //u8g2.setFont(u8g2_font_ncenB10_tr);
-  u8g2.setFontDirection(3); // Down to Top
-  u8g2_uint_t away_team_name_start_y = u8g2.getDisplayHeight() - (u8g2.getDisplayHeight() - u8g2.getStrWidth(away_team_name)) / 2;
-  u8g2_uint_t away_team_name_start_x = u8g2.getDisplayWidth() - u8g2.getFontAscent() + 5;
-  u8g2.drawStr(away_team_name_start_x,away_team_name_start_y, away_team_name);
+//   // Draw Away Team Name
+//   //u8g2.setFont(u8g2_font_ncenB10_tr);
+//   u8g2.setFontDirection(3); // Down to Top
+//   u8g2_uint_t away_team_name_start_y = u8g2.getDisplayHeight() - (u8g2.getDisplayHeight() - u8g2.getStrWidth(away_team_name)) / 2;
+//   u8g2_uint_t away_team_name_start_x = u8g2.getDisplayWidth() - u8g2.getFontAscent() + 5;
+//   u8g2.drawStr(away_team_name_start_x,away_team_name_start_y, away_team_name);
 
-  u8g2.sendBuffer();
-}
+//   u8g2.sendBuffer();
+// }
 
 void goalHomeScored(unsigned long goalTime) {
   scoreKeeper->scoreHomeGoal(goalTime);
@@ -143,12 +159,13 @@ void undoLastGoal() {
 
 void setup() {
   // Configure the home/away goal sensor digital pin.
-  pinMode(PIN_GOAL_HOME, INPUT);
-  pinMode(PIN_GOAL_AWAY, INPUT);
-  pinMode(PIN_BUTTON_RESET, INPUT_PULLDOWN);
-  pinMode(PIN_DISPLAY_CS, OUTPUT);
-  pinMode(PIN_DISPLAY_DC, OUTPUT);
-  pinMode(PIN_DISPLAY_RST, OUTPUT);
+  // pinMode(PIN_GOAL_HOME, INPUT);
+  // pinMode(PIN_GOAL_AWAY, INPUT);
+  // pinMode(PIN_BUTTON_RESET, INPUT_PULLDOWN);
+
+  // pinMode(PIN_DISPLAY_CS, OUTPUT);
+  // pinMode(PIN_DISPLAY_DC, OUTPUT);
+  // pinMode(PIN_DISPLAY_RST, OUTPUT);
 
   delay(2000);
 
@@ -157,17 +174,31 @@ void setup() {
   Serial.println("setup()");
 
   // Setup the display
-  u8g2.begin();
+  // u8g2.begin();
+  pinMode(BACKLIGHT_PIN, OUTPUT);
+  digitalWrite(BACKLIGHT_PIN, HIGH); 
+  gfx->begin();
+  gfx->fillScreen(BLUE);
+  gfx->setCursor(20, 20);
+  gfx->setTextSize(10);
+  gfx->print("Hello Jordan!");
 
   // Reset Game
-  resetGame();
+  //resetGame();
+  
 }
 
 
 // Main loop.
 void loop() {
+  Serial.println("loop()");
+  delay(1000);
 
-  drawScoreBoard();
+  
+
+  return;
+
+  //drawScoreBoard();
 
   // Read the value of our reset button
   int resetButtonPinValue = digitalRead(PIN_BUTTON_RESET);
